@@ -59,9 +59,9 @@ ARC---SECURE-HEALTHCARE-SYSTEM
      pip install -r requirements.txt
 3. Run the application:
      python app.py
-4. Open browser:
+4. Open your browser and navigate to:
      http://127.0.0.1:5000
-
+   
 ---
 
 ## Future Improvements
