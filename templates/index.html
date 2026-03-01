@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedAccess OS — Secure Healthcare Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
+
+
+:root {
+  --bg:        #060910;
+  --bg2:       #090d17;
+  --surf:      #0d1422;
+  --surf2:     #111929;
+  --surf3:     #172035;
+  --border:    #1a2540;
+  --border2:   #1e2d4d;
+  --border3:   #243560;
+
+  --teal:      #00f5c8;
+  --teal2:     #00c9a5;
+  --teal-glow: #00f5c820;
+  --teal-dim:  #00f5c812;
+  --blue:      #3d9eff;
+  --blue-dim:  #3d9eff15;
+  --amber:     #ffcb47;
+  --amber-dim: #ffcb4712;
+  --red:       #ff4d6a;
+  --red-dim:   #ff4d6a12;
+  --green:     #3dffa0;
+  --green-dim: #3dffa012;
+  --purple:    #b794f4;
+  --purple-dim:#b794f412;
+
+  --text:      #dce8f8;
+  --text2:     #6b88b8;
+  --text3:     #3a5080;
+
+  --mono: 'JetBrains Mono', monospace;
+  --head: 'Syne', sans-serif;
+
+  --r: 6px;
+  --shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* scanlines */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg,
+    transparent, transparent 3px,
+    rgba(0,245,200,.008) 3px, rgba(0,245,200,.008) 4px);
+  pointer-events: none;
+  z-index: 9997;
+}
+
+
+.grid-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: .25;
+  pointer-events: none;
+}
+.glow-orb {
+  position: fixed; border-radius: 50%;
+  pointer-events: none; z-index: 0;
+  filter: blur(80px);
+  opacity: .12;
+}
+.orb1 { width: 600px; height: 400px; background: var(--teal);  top: -100px; left: -100px; }
+.orb2 { width: 400px; height: 400px; background: var(--blue);  bottom: 100px; right: -100px; }
+.orb3 { width: 300px; height: 300px; background: var(--purple); top: 40%; left: 40%; }
+
+
+.auth-wrap {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-panel {
+  width: 100%; max-width: 440px;
+  background: var(--surf);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(0,245,200,.06);
+  position: relative;
+  animation: panelIn .5s cubic-bezier(.22,1,.36,1);
+}
+@keyframes panelIn {
+  from { opacity:0; transform: translateY(24px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.auth-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+}
+
+.auth-header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+}
+.auth-logo {
+  width: 44px; height: 44px;
+  background: var(--teal-dim);
+  border: 1px solid #00f5c830;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px var(--teal-glow);
+}
+.auth-title h1 {
+  font-family: var(--head);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .01em;
+}
+.auth-title p {
+  font-size: .68rem;
+  color: var(--text3);
+  margin-top: 2px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.auth-body { padding: 24px 32px 28px; }
+
+
+.step-track {
+  display: flex; gap: 6px; margin-bottom: 22px;
+}
+.step-dot {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: var(--border2);
+  transition: background .3s;
+}
+.step-dot.done { background: var(--teal); box-shadow: 0 0 8px var(--teal-glow); }
+.step-dot.active { background: var(--amber); }
+
+.step-label {
+  font-size: .65rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .1em;
+  margin-bottom: 14px;
+}
+.step-label span { color: var(--teal); }
+
+
+.fgroup { margin-bottom: 16px; }
+.fgroup label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text3); margin-bottom: 7px;
+}
+.fgroup label .licon { color: var(--teal); font-size: .7rem; }
+
+.finput-wrap { position: relative; }
+.finput {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: .83rem;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  outline: none;
+}
+.finput:focus {
+  border-color: var(--teal);
+  background: var(--surf3);
+  box-shadow: 0 0 0 3px var(--teal-dim);
+}
+.finput.err { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-dim); }
+.finput.ok  { border-color: var(--green); }
+.finput::placeholder { color: var(--text3); }
+
+.eye-toggle {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: .85rem;
+  transition: color .15s;
+}
+.eye-toggle:hover { color: var(--teal); }
+
+
+.pw-strength { margin-top: 8px; }
+.pw-bar { height: 3px; border-radius: 2px; background: var(--border2); overflow: hidden; }
+.pw-fill {
+  height: 100%; width: 0; border-radius: 2px;
+  transition: width .3s, background .3s;
+}
+.pw-labels {
+  display: flex; justify-content: space-between;
+  font-size: .6rem; color: var(--text3); margin-top: 4px;
+}
+.pw-score-text { font-size: .65rem; margin-top: 4px; }
+
+
+.pw-reqs { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.pw-req {
+  font-size: .62rem; color: var(--text3);
+  display: flex; align-items: center; gap: 5px;
+  transition: color .2s;
+}
+.pw-req.met { color: var(--green); }
+.pw-req .ricon { font-size: .55rem; }
+
+
+.otp-grid {
+  display: flex; gap: 10px; justify-content: center;
+  margin: 10px 0 4px;
+}
+.otp-digit {
+  width: 52px; height: 58px;
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  text-align: center;
+  font-family: var(--head);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--teal);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  caret-color: var(--teal);
+}
+.otp-digit:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-dim);
+}
+.otp-digit.filled { border-color: var(--teal2); }
+
+.otp-timer {
+  text-align: center; font-size: .7rem; color: var(--text3); margin-top: 6px;
+}
+.otp-timer span { color: var(--amber); font-weight: 600; }
+.otp-timer.expiring span { color: var(--red); animation: blink .8s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+
+.lockout-box {
+  background: var(--red-dim);
+  border: 1px solid #ff4d6a30;
+  border-radius: var(--r);
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.lockout-box .lock-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.lockout-box h3 { font-size: .85rem; color: var(--red); font-family: var(--head); font-weight: 700; margin-bottom: 6px; }
+.lockout-box p  { font-size: .72rem; color: var(--text2); line-height: 1.6; }
+.lockout-box .lock-timer {
+  font-size: 1.2rem; font-weight: 700; color: var(--red);
+  font-family: var(--head); margin-top: 8px;
+}
+
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 20px;
+  border: 1px solid; border-radius: var(--r);
+  font-family: var(--mono); font-size: .75rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .08em;
+  cursor: pointer; transition: all .15s;
+  text-decoration: none; white-space: nowrap;
+}
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-block  { width: 100%; }
+.btn-teal   { background: var(--teal-dim); color: var(--teal);   border-color: #00f5c830; }
+.btn-teal:hover:not(:disabled)   { background: #00f5c822; box-shadow: 0 0 20px var(--teal-glow); }
+.btn-red    { background: var(--red-dim);  color: var(--red);    border-color: #ff4d6a30; }
+.btn-red:hover:not(:disabled)    { background: #ff4d6a22; }
+.btn-amber  { background: var(--amber-dim);color: var(--amber);  border-color: #ffcb4730; }
+.btn-amber:hover:not(:disabled)  { background: #ffcb4722; }
+.btn-green  { background: var(--green-dim);color: var(--green);  border-color: #3dffa030; }
+.btn-green:hover:not(:disabled)  { background: #3dffa022; }
+.btn-ghost  { background: var(--surf2);    color: var(--text2);  border-color: var(--border); }
+.btn-ghost:hover:not(:disabled)  { color: var(--text); border-color: var(--border2); }
+.btn-blue   { background: var(--blue-dim); color: var(--blue);   border-color: #3d9eff30; }
+.btn-blue:hover:not(:disabled)   { background: #3d9eff22; }
+.btn-sm     { padding: 6px 12px; font-size: .65rem; }
+.btn-loading::after {
+  content: '';
+  width: 12px; height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+.attempt-track {
+  display: flex; gap: 5px; margin-top: 10px; justify-content: center;
+}
+.attempt-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border2); border: 1px solid var(--border3);
+  transition: all .2s;
+}
+.attempt-dot.used { background: var(--red); border-color: var(--red); box-shadow: 0 0 6px var(--red); }
+.attempt-dot.ok   { background: var(--green); border-color: var(--green); }
+
+
+.alert {
+  padding: 10px 14px; border-radius: var(--r);
+  font-size: .72rem; display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 14px; line-height: 1.5;
+}
+.alert-err  { background: var(--red-dim);   border: 1px solid #ff4d6a25; color: #ff9aaa; }
+.alert-ok   { background: var(--green-dim); border: 1px solid #3dffa025; color: var(--green); }
+.alert-warn { background: var(--amber-dim); border: 1px solid #ffcb4725; color: var(--amber); }
+.alert-info { background: var(--teal-dim);  border: 1px solid #00f5c825; color: var(--teal); }
+
+
+.demo-box {
+  margin-top: 18px;
+  background: var(--surf2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px;
+  font-size: .65rem; color: var(--text3); line-height: 1.9;
+}
+.demo-box .dtitle { color: var(--text2); font-weight: 600; margin-bottom: 4px; letter-spacing: .06em; }
+.demo-cred { color: var(--teal); font-weight: 500; }
+
+
+.sec-strip {
+  padding: 8px 32px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap;
+}
+.sec-badge {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .58rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.sec-badge .icon { font-size: .7rem; }
+
+
+#app { display: none; position: relative; z-index: 10; min-height: 100vh; }
+
+.layout { display: flex; min-height: 100vh; }
+
+
+.sidebar {
+  width: 230px; flex-shrink: 0;
+  background: var(--surf);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; height: 100vh;
+  z-index: 100; overflow: hidden;
+}
+.sidebar::after {
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--teal2), transparent);
+  opacity: .3;
+}
+
+.sb-brand {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-brand .logo-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sb-brand .logo-icon {
+  width: 32px; height: 32px;
+  background: var(--teal-dim); border: 1px solid #00f5c825;
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; box-shadow: 0 0 12px var(--teal-glow);
+  flex-shrink: 0;
+}
+.sb-brand h2 {
+  font-family: var(--head); font-size: .9rem; font-weight: 800;
+  color: var(--text); letter-spacing: .02em;
+}
+
+.sb-user {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-username {
+  font-weight: 600; font-size: .8rem; color: var(--text); margin-bottom: 4px;
+}
+.role-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 3px;
+  font-size: .6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.chip-doctor { background: var(--teal-dim);  color: var(--teal);   border: 1px solid #00f5c825; }
+.chip-admin  { background: var(--purple-dim);color: var(--purple); border: 1px solid #b794f425; }
+.sb-ip {
+  font-size: .58rem; color: var(--text3); margin-top: 5px;
+  display: flex; align-items: center; gap: 5px;
+}
+.ip-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--green);
+  box-shadow: 0 0 6px var(--green); animation: pulse-g 2s infinite;
+}
+@keyframes pulse-g {
+  0%,100%{opacity:1}50%{opacity:.4}
+}
+
+.sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  color: var(--text2); font-size: .75rem; font-weight: 500;
+  cursor: pointer; border-left: 2px solid transparent;
+  transition: all .15s; position: relative;
+}
+.nav-item:hover { color: var(--text); background: var(--surf2); }
+.nav-item.active {
+  color: var(--teal); background: var(--teal-dim);
+  border-left-color: var(--teal);
+}
+.nav-icon { width: 16px; text-align: center; font-size: .85rem; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--red);
+  color: #fff; font-size: .58rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 10px;
+  box-shadow: 0 0 8px var(--red);
+}
+
+.nav-divider {
+  margin: 8px 16px;
+  border: none; border-top: 1px solid var(--border);
+}
+
+.sb-footer { padding: 12px 16px; border-top: 1px solid var(--border); }
+.session-bar {
+  height: 2px; border-radius: 1px; background: var(--border2);
+  margin-bottom: 8px; overflow: hidden;
+}
+.session-fill {
+  height: 100%; width: 100%; border-radius: 1px;
+  background: var(--teal);
+  transition: width 1s linear, background .5s;
+}
+.session-fill.warn { background: var(--amber); }
+.session-fill.crit { background: var(--red); }
+.session-text { font-size: .6rem; color: var(--text3); margin-bottom: 10px; display: flex; justify-content: space-between; }
+.btn-logout {
+  width: 100%; padding: 8px;
+  background: var(--red-dim); border: 1px solid #ff4d6a25;
+  color: var(--red); font-family: var(--mono); font-size: .65rem;
+  font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  border-radius: var(--r); cursor: pointer; transition: all .15s;
+}
+.btn-logout:hover { background: #ff4d6a20; }
+
+
+.main {
+  margin-left: 230px; flex: 1;
+  padding: 28px 32px; min-height: 100vh;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 {
+  font-family: var(--head); font-size: 1.15rem;
+  font-weight: 700; color: var(--text);
+}
+.topbar .sub { font-size: .65rem; color: var(--text3); margin-top: 3px; letter-spacing: .05em; }
+.clock-chip {
+  font-size: .65rem; color: var(--text2);
+  background: var(--surf2); border: 1px solid var(--border);
+  padding: 5px 10px; border-radius: var(--r);
+  display: flex; align-items: center; gap: 6px;
+}
+
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; margin-bottom: 20px; }
+.scard {
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px; position: relative; overflow: hidden;
+}
+.scard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.scard.teal::before  { background: linear-gradient(90deg,var(--teal),transparent); }
+.scard.blue::before  { background: linear-gradient(90deg,var(--blue),transparent); }
+.scard.amber::before { background: linear-gradient(90deg,var(--amber),transparent); }
+.scard.red::before   { background: linear-gradient(90deg,var(--red),transparent); }
+.scard.green::before { background: linear-gradient(90deg,var(--green),transparent); }
+.scard.purple::before{ background: linear-gradient(90deg,var(--purple),transparent); }
+.sv { font-family: var(--head); font-size: 1.7rem; font-weight: 800; line-height: 1; }
+.scard.teal  .sv { color: var(--teal); }
+.scard.blue  .sv { color: var(--blue); }
+.scard.amber .sv { color: var(--amber); }
+.scard.red   .sv { color: var(--red); }
+.scard.green .sv { color: var(--green); }
+.scard.purple.sv { color: var(--purple); }
+.scard.purple .sv { color: var(--purple); }
+.sl { font-size: .6rem; color: var(--text3); margin-top: 5px; text-transform: uppercase; letter-spacing: .08em; }
+
+
+.card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 16px; overflow: hidden; }
+.card-head {
+  padding: 12px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .62rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text3);
+}
+.card-head .head-actions { display: flex; gap: 8px; }
+.card-body { padding: 18px; }
+
+
+.tw { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .75rem; }
+th {
+  padding: 9px 14px; text-align: left;
+  font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text3); border-bottom: 1px solid var(--border);
+  background: var(--surf2);
+}
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surf2); }
+tr.emerg td { background: #ff4d6a08 !important; }
+tr.suspicious td { background: #ffcb4706 !important; }
+
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 7px; border-radius: 3px;
+  font-size: .58rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+}
+.b-teal   { background:var(--teal-dim);  color:var(--teal);   border:1px solid #00f5c828; }
+.b-red    { background:var(--red-dim);   color:var(--red);    border:1px solid #ff4d6a28; }
+.b-amber  { background:var(--amber-dim); color:var(--amber);  border:1px solid #ffcb4728; }
+.b-green  { background:var(--green-dim); color:var(--green);  border:1px solid #3dffa028; }
+.b-blue   { background:var(--blue-dim);  color:var(--blue);   border:1px solid #3d9eff28; }
+.b-purple { background:var(--purple-dim);color:var(--purple); border:1px solid #b794f428; }
+
+
+.notice {
+  padding: 11px 14px; border-radius: var(--r); font-size: .7rem;
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px;
+  line-height: 1.55;
+}
+.n-info  { background:var(--teal-dim);  border:1px solid #00f5c820; color:var(--teal); }
+.n-warn  { background:var(--amber-dim); border:1px solid #ffcb4720; color:var(--amber); }
+.n-red   { background:var(--red-dim);   border:1px solid #ff4d6a20; color:#ff8fa0; }
+.n-green { background:var(--green-dim); border:1px solid #3dffa020; color:var(--green); }
+
+
+.emerg-banner {
+  background: linear-gradient(135deg,#ff4d6a15,#ff4d6a06);
+  border: 1px solid #ff4d6a35;
+  border-radius: var(--r); padding: 13px 18px;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 14px;
+  animation: emerg-pulse 2s infinite;
+}
+@keyframes emerg-pulse {
+  0%,100%{border-color:#ff4d6a35}
+  50%{border-color:#ff4d6aaa}
+}
+.pulse-dot {
+  width: 10px; height: 10px; border-radius: 50%; background:var(--red);
+  box-shadow: 0 0 0 0 #ff4d6a80;
+  animation: p-ring 1.5s infinite; flex-shrink:0;
+}
+@keyframes p-ring {
+  0%{box-shadow:0 0 0 0 #ff4d6a80}
+  70%{box-shadow:0 0 0 8px transparent}
+  100%{box-shadow:0 0 0 0 transparent}
+}
+
+
+.stepup-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.8);
+  backdrop-filter: blur(6px); z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.stepup-box {
+  background: var(--surf); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 28px; width: 90%; max-width: 400px;
+  position: relative; box-shadow: var(--shadow);
+}
+.stepup-box::before {
+  content: ''; position: absolute; top:0;left:20%;right:20%;height:1px;
+  background: linear-gradient(90deg,transparent,var(--amber),transparent);
+}
+
+
+.toast-wrap {
+  position: fixed; top:18px; right:18px; z-index:9998;
+  display:flex; flex-direction:column; gap:8px; pointer-events:none;
+}
+.toast {
+  padding: 11px 16px; border-radius: var(--r);
+  font-size: .72rem; display: flex; align-items: center; gap: 10px;
+  min-width: 260px; max-width: 340px;
+  animation: toastIn .3s cubic-bezier(.22,1,.36,1);
+  pointer-events: all;
+}
+@keyframes toastIn {
+  from{opacity:0;transform:translateX(20px)}
+  to{opacity:1;transform:translateX(0)}
+}
+.t-ok   { background:var(--green-dim); border:1px solid #3dffa030; color:var(--green); }
+.t-err  { background:var(--red-dim);   border:1px solid #ff4d6a30; color:var(--red); }
+.t-warn { background:var(--amber-dim); border:1px solid #ffcb4730; color:var(--amber); }
+.t-info { background:var(--teal-dim);  border:1px solid #00f5c830; color:var(--teal); }
+
+
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fsingle { grid-column: 1/-1; }
+
+.rof {
+  padding: 10px 12px; background: var(--surf2);
+  border: 1px solid var(--border); border-radius: var(--r);
+  font-size: .78rem; color: var(--text2); min-height: 40px;
+  line-height: 1.5;
+}
+
+
+.proposed {
+  background: var(--surf3); border: 1px solid var(--border2);
+  border-left: 3px solid var(--amber); border-radius: var(--r);
+  padding: 12px; font-size: .75rem; white-space: pre-wrap;
+  line-height: 1.6; color: var(--text); margin-bottom: 12px;
+}
+
+
+.hcell { font-size: .6rem; color: var(--text3); font-family: var(--mono); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+.divider { border:none; border-top:1px solid var(--border); margin:16px 0; }
+.flex { display:flex; } .gap { gap:8px; } .ic { align-items:center; } .jb { justify-content:space-between; }
+.empty { text-align:center; padding:36px; color:var(--text3); font-size:.75rem; }
+.mono { font-family:var(--mono); }
+.head-font { font-family:var(--head); }
+.fw2 { color:var(--text2); } .fw3 { color:var(--text3); }
+.mt-sm { margin-top:8px; } .mt { margin-top:16px; }
+.w100 { width:100%; }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+<div class="glow-orb orb3"></div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+
+<div id="auth-screens">
+
+
+<div id="s-login" class="auth-wrap">
+  <div class="auth-panel">
+    <div class="auth-header">
+      <div class="auth-logo">🔒</div>
+      <div class="auth-title">
+        <h1>MedAccess OS</h1>
+        <p>Healthcare Access Control Platform</p>
+      </div>
+    </div>
+    <div class="auth-body">
+      <div class="step-track">
+        <div class="step-dot active" id="st1a"></div>
+        <div class="step-dot" id="st1b"></div>
+        <div class="step-dot" id="st1c"></div>
+      </div>
+      <div class="step-label">Step <span>1 of 3</span> — Credential Verification</div>
+
+      <div id="lockout-display" style="display:none" class="lockout-box">
+        <div class="lock-icon">🔐</div>
+        <h3>Account Locked</h3>
+        <p>Too many failed attempts. Account locked for security.</p>
+        <div class="lock-timer" id="lock-countdown">15:00</div>
+      </div>
+
+      <div id="login-alert" class="alert alert-err" style="display:none"></div>
+
+      <div id="login-form">
+        <div class="fgroup">
+          <label><span class="licon">◈</span> Username</label>
+          <input class="finput" id="l-user" type="text" placeholder="Enter username" autocomplete="off">
+        </div>
+        <div class="fgroup">
+          <label><span class="licon">🔑</span> Password</label>
+          <div class="finput-wrap">
+            <input class="finput" id="l-pass" type="password" placeholder="Enter password">
+            <button class="eye-toggle" onclick="toggleEye('l-pass','l-eye')" id="l-eye">👁</button>
+          </div>
+        </div>
+
+        <div class="attempt-track" id="attempt-dots" style="display:none">
+          <div class="attempt-dot" id="ad1"></div>
+          <div class="attempt-dot" id="ad2"></div>
+          <div class="attempt-dot" id="ad3"></div>
+          <div class="attempt-dot" id="ad4"></div>
+          <div class="attempt-dot" id="ad5"></div>
+        </div>
+
+        <button class="btn btn-teal btn-block mt" id="btn-login">🔐 &nbsp;Authenticate</button>
+
+        <div class="demo-box">
+          <div class="dtitle">// DEMO CREDENTIALS</div>
+          Doctor &nbsp;→ <span class="demo-cred">dr_smith / doctor123!</span><br>
+          Doctor &nbsp;→ <span class="demo-cred">dr_jones / Doctor456@</span><br>
+          Admin &nbsp;&nbsp;→ <span class="demo-cred">admin_lee / Admin789#</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-strip">
+      <div class="sec-badge"><span class="icon">🔒</span>bcrypt</div>
+      <div class="sec-badge"><span class="icon">🛡</span>CSRF Protected</div>
+      <div class="sec-badge"><span class="icon">🚫</span>Brute-force Guard</div>
+      <div class="sec-badge"><span class="icon">📋</span>Audit Logged</div>
+    </div>
+  </div>
+</div>
+
+
+<div id="s-mfa" class="auth-wrap" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-header">
+      <div class="auth-logo" style="background:var(--amber-dim);border-color:#ffcb4730;">📱</div>
+      <div class="auth-title">
+        <h1>MFA Verification</h1>
+        <p>Multi-Factor Authentication Required</p>
+      </div>
+    </div>
+    <div class="auth-body">
+      <div class="step-track">
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="step-label">Step <span>2 of 3</span> — One-Time Password</div>
+
+      <div class="alert alert-info" id="otp-console-msg">
+        📟 &nbsp;OTP sent! Check the <strong>browser console</strong> (F12 → Console) for your code.
+      </div>
+
+      <div class="fgroup">
+        <label><span class="licon">📱</span> Enter 6-Digit OTP</label>
+        <div class="otp-grid">
+          <input class="otp-digit" id="otp0" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" id="otp1" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" id="otp2" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" id="otp3" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" id="otp4" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" id="otp5" maxlength="1" type="text" inputmode="numeric">
+        </div>
+        <div class="otp-timer" id="otp-timer">OTP expires in <span id="otp-secs">5:00</span></div>
+      </div>
+
+      <div id="mfa-alert" class="alert alert-err" style="display:none"></div>
+
+      <button class="btn btn-amber btn-block" id="btn-verify-otp">🔑 &nbsp;Verify OTP</button>
+      <button class="btn btn-ghost btn-block mt-sm" onclick="resendOtp()">↻ &nbsp;Resend OTP</button>
+      <button class="btn btn-ghost btn-block mt-sm" onclick="backToLogin()" style="font-size:.62rem;padding:7px;">← Back to Login</button>
+    </div>
+    <div class="sec-strip">
+      <div class="sec-badge"><span class="icon">⏱</span>5-Min Expiry</div>
+      <div class="sec-badge"><span class="icon">🎲</span>Cryptographic OTP</div>
+      <div class="sec-badge"><span class="icon">🔄</span>Session Regenerated</div>
+    </div>
+  </div>
+</div>
+
+
+<div id="s-ready" class="auth-wrap" style="display:none">
+  <div class="auth-panel">
+    <div class="auth-header">
+      <div class="auth-logo" style="background:var(--green-dim);border-color:#3dffa030;box-shadow:0 0 20px #3dffa030;">✅</div>
+      <div class="auth-title">
+        <h1>Access Granted</h1>
+        <p>Identity Verified — Secure Session Active</p>
+      </div>
+    </div>
+    <div class="auth-body">
+      <div class="step-track">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+      </div>
+      <div class="step-label">Step <span>3 of 3</span> — Authorization Complete</div>
+      <div class="alert alert-ok" id="granted-msg">✅ Authentication complete. Loading your dashboard…</div>
+      <button class="btn btn-green btn-block" id="btn-enter">⊕ &nbsp;Enter Dashboard</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<div id="app">
+  <div class="layout">
+
+    
+    <aside class="sidebar">
+      <div class="sb-brand">
+        <div class="logo-row">
+          <div class="logo-icon">⊕</div>
+          <h2>MedAccess OS</h2>
+        </div>
+      </div>
+      <div class="sb-user">
+        <div class="sb-username" id="sb-name">—</div>
+        <span class="role-chip" id="sb-chip">—</span>
+        <div class="sb-ip"><div class="ip-dot"></div><span id="sb-ip">Authenticated</span></div>
+      </div>
+      <nav class="sb-nav" id="sb-nav"></nav>
+      <div class="sb-footer">
+        <div class="session-bar"><div class="session-fill" id="sess-fill"></div></div>
+        <div class="session-text"><span>Session</span><span id="sess-time">10:00</span></div>
+        <button class="btn-logout" onclick="doLogout()">⬅ &nbsp;LOGOUT</button>
+      </div>
+    </aside>
+
+   
+    <main class="main" id="main"></main>
+
+  </div>
+</div>
+
+
+
+<script>
+'use strict';
+
+
+const DB = {
+  users: [
+    { id:1, username:'dr_smith',  password:'doctor123!', role:'doctor', locked:false, lockUntil:null, failCount:0 },
+    { id:2, username:'dr_jones',  password:'Doctor456@', role:'doctor', locked:false, lockUntil:null, failCount:0 },
+    { id:3, username:'admin_lee', password:'Admin789#',  role:'admin',  locked:false, lockUntil:null, failCount:0 },
+  ],
+  patients: [
+    {id:1,name:'Alice Johnson',phone:'555-1234',address:'10 Maple St',insurance:'BlueCross #A100',diagnosis:'Hypertension',prescription:'Lisinopril 10mg daily',diagnosis_status:'Active'},
+    {id:2,name:'Bob Williams', phone:'555-5678',address:'22 Oak Ave', insurance:'Aetna #B200',    diagnosis:'Type 2 Diabetes',prescription:'Metformin 500mg twice daily',diagnosis_status:'Active'},
+    {id:3,name:'Carol Davis',  phone:'555-9012',address:'5 Pine Rd',  insurance:'United #C300',   diagnosis:'Asthma',prescription:'Albuterol inhaler PRN',diagnosis_status:'Active'},
+    {id:4,name:'David Brown',  phone:'555-3456',address:'88 Elm Dr',  insurance:'Cigna #D400',    diagnosis:'Migraine',prescription:'Sumatriptan 50mg PRN',diagnosis_status:'Active'},
+  ],
+  clinical_requests: [],
+  audit_logs:  [],
+  login_logs:  [],   
+  emergency_logs: [],
+  _ids: { req:1, audit:1, login:1, emerg:1 },
+};
+
+
+const knownIPs = {};
+
+
+const SESSION_MS = 10 * 60 * 1000; 
+
+let S = {
+  user: null,
+  ip: null,
+  start: null,
+  timeoutId: null,
+  tickId: null,
+  emergencyAccess: null,
+  lastOtp: null,
+  otpExpiry: null,
+  otpTimerId: null,
+
+  pendingUser: null,   
+  mfaAttemptsLeft: 3,
+};
+
+function fakeIP() {
+ 
+  const stored = sessionStorage.getItem('fake_ip');
+  if (stored) return stored;
+  const ip = `192.168.${Math.floor(Math.random()*3)}.${10+Math.floor(Math.random()*50)}`;
+  sessionStorage.setItem('fake_ip', ip);
+  return ip;
+}
+
+
+function hashPw(pw) {
+
+  let h = 0;
+  for (let i=0;i<pw.length;i++) h = ((h<<5)-h) + pw.charCodeAt(i), h|=0;
+  const salt = 'MEDACCESS_BCRYPT_SALT_v2';
+  let h2 = 0;
+  for (let i=0;i<(pw+salt).length;i++) h2 = ((h2<<5)-h2)+(pw+salt).charCodeAt(i), h2|=0;
+  return `$2b$12$${Math.abs(h).toString(36)}${Math.abs(h2).toString(36)}`;
+}
+
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function chainHash(prev, data) {
+  const s = prev + JSON.stringify(data);
+  let h = 0x811c9dc5;
+  for (let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h*0x01000193)>>>0;}
+  let h2 = 0;
+  for (let i=0;i<s.length;i++) h2=(h2*31+s.charCodeAt(i))>>>0;
+  return (h.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')).repeat(4).substring(0,64);
+}
+
+function validatePassword(pw) {
+  const checks = {
+    length:    pw.length >= 8,
+    upper:     /[A-Z]/.test(pw),
+    number:    /[0-9]/.test(pw),
+    special:   /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  return { checks, score, valid: score === 4 };
+}
+
+
+function auditLog(username, role, action, patientId=null, emergFlag=false) {
+  const prev = DB.audit_logs[DB.audit_logs.length-1];
+  const prevHash = prev ? prev.current_hash : 'GENESIS_MEDACCESS_000';
+  const ts = new Date().toISOString();
+  const data = {username,role,action,patientId,ts,emergFlag};
+  DB.audit_logs.push({
+    id: DB._ids.audit++, ...data,
+    prev_hash: prevHash,
+    current_hash: chainHash(prevHash, data),
+  });
+}
+
+function loginLog(username, role, ip, status, suspicious=false) {
+  DB.login_logs.push({
+    id: DB._ids.login++,
+    username, role: role||'unknown',
+    login_time: new Date().toISOString(),
+    ip, status, suspicious,
+  });
+  if (suspicious) {
+    auditLog('SYSTEM','system',`SUSPICIOUS_IP_LOGIN: ${username} from ${ip}`);
+  }
+}
+
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS   = 15 * 60 * 1000;
+
+function checkLock(user) {
+  if (!user.locked) return false;
+  if (Date.now() >= user.lockUntil) {
+    user.locked = false; user.lockUntil = null; user.failCount = 0;
+    return false;
+  }
+  return true;
+}
+
+function recordFail(user) {
+  user.failCount++;
+  if (user.failCount >= MAX_ATTEMPTS) {
+    user.locked = true;
+    user.lockUntil = Date.now() + LOCKOUT_MS;
+    loginLog(user.username, user.role, S.ip||fakeIP(), 'locked');
+    auditLog('SYSTEM','system',`ACCOUNT_LOCKED: ${user.username} after ${MAX_ATTEMPTS} failed attempts`);
+    return true;
+  }
+  return false;
+}
+
+function startLockCountdown(user) {
+  const el = document.getElementById('lock-countdown');
+  const inv = setInterval(() => {
+    const rem = Math.max(0, user.lockUntil - Date.now());
+    const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
+    el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (rem <= 0) {
+      clearInterval(inv);
+      document.getElementById('lockout-display').style.display='none';
+      document.getElementById('login-form').style.display='block';
+      user.locked=false; user.lockUntil=null; user.failCount=0;
+      updateAttemptDots(0);
+      toast('Account unlocked. You may try again.','info');
+    }
+  }, 1000);
+}
+
+function updateAttemptDots(count) {
+  const wrap = document.getElementById('attempt-dots');
+  wrap.style.display = count > 0 ? 'flex' : 'none';
+  for (let i=1;i<=5;i++) {
+    const d = document.getElementById('ad'+i);
+    d.className = 'attempt-dot' + (i<=count ? ' used' : '');
+  }
+}
+
+
+function updatePwStrength(pw, barId, fillId, textId, reqsId) {
+  const { checks, score } = validatePassword(pw);
+  const colors = ['','#ff4d6a','#ff4d6a','#ffcb47','#3dffa0'];
+  const labels = ['','Weak','Weak','Fair','Strong'];
+  const pct    = [0, 25, 50, 75, 100];
+  const fill = document.getElementById(fillId);
+  if (fill) { fill.style.width = pct[score]+'%'; fill.style.background = colors[score]||'var(--border2)'; }
+  const txt = document.getElementById(textId);
+  if (txt) txt.textContent = score>0 ? labels[score] : '';
+  if (reqsId) {
+    const r = document.getElementById(reqsId);
+    if (r) {
+      r.querySelector('[data-req="length"]')?.classList.toggle('met', checks.length);
+      r.querySelector('[data-req="upper"]')?.classList.toggle('met', checks.upper);
+      r.querySelector('[data-req="number"]')?.classList.toggle('met', checks.number);
+      r.querySelector('[data-req="special"]')?.classList.toggle('met', checks.special);
+    }
+  }
+}
+
+
+function issueOtp() {
+  const code = generateOtp();
+  S.lastOtp = code;
+  S.otpExpiry = Date.now() + 5*60*1000;
+  console.log(`%c🔐 MedAccess MFA OTP: ${code} (valid 5 min)`,
+    'background:#0d1422;color:#00f5c8;font-size:18px;padding:8px 16px;border-radius:4px;border:1px solid #00f5c8');
+  startOtpTimer();
+  return code;
+}
+
+function startOtpTimer() {
+  clearInterval(S.otpTimerId);
+  const el = document.getElementById('otp-secs');
+  const wrap = document.getElementById('otp-timer');
+  S.otpTimerId = setInterval(() => {
+    const rem = Math.max(0, S.otpExpiry - Date.now());
+    const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
+    if (el) el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (wrap) wrap.className = 'otp-timer' + (rem<60000?' expiring':'');
+    if (rem<=0) { clearInterval(S.otpTimerId); if(el)el.textContent='EXPIRED'; }
+  }, 1000);
+}
+
+function resendOtp() {
+  issueOtp();
+  toast('New OTP issued. Check browser console (F12).','info');
+}
+
+function getOtpValue() {
+  return [0,1,2,3,4,5].map(i=>(document.getElementById('otp'+i)||{}).value||'').join('');
+}
+
+
+document.querySelectorAll('.otp-digit').forEach((el,i,arr) => {
+  el.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g,'');
+    e.target.value = v ? v[0] : '';
+    e.target.classList.toggle('filled', !!e.target.value);
+    if (v && i < arr.length-1) arr[i+1].focus();
+    if (getOtpValue().length===6) verifyOtp();
+  });
+  el.addEventListener('keydown', e => {
+    if (e.key==='Backspace' && !e.target.value && i>0) arr[i-1].focus();
+  });
+});
+
+
+function doLogin() {
+  const username = document.getElementById('l-user').value.trim();
+  const password = document.getElementById('l-pass').value;
+  const ip = fakeIP();
+  S.ip = ip;
+
+  const alertEl = document.getElementById('login-alert');
+  alertEl.style.display = 'none';
+
+  const user = DB.users.find(u=>u.username===username);
+  if (!user) {
+    loginLog(username,'unknown',ip,'failed');
+    showLoginError('Invalid username or password.');
+    return;
+  }
+
+ 
+  if (checkLock(user)) {
+    showLockout(user);
+    return;
+  }
+
+ 
+  if (user.password !== password) {
+    const locked = recordFail(user);
+    loginLog(username,user.role,ip,'failed');
+    updateAttemptDots(user.failCount);
+    if (locked) {
+      showLockout(user);
+    } else {
+      const rem = MAX_ATTEMPTS - user.failCount;
+      showLoginError(`Invalid credentials. ${rem} attempt${rem!==1?'s':''} remaining.`);
+    }
+    return;
+  }
+
+
+  user.failCount = 0;
+
+ 
+  const prevIPs = knownIPs[username] || [];
+  const suspicious = prevIPs.length > 0 && !prevIPs.includes(ip);
+  if (!prevIPs.includes(ip)) { knownIPs[username] = [...prevIPs, ip]; }
+
+  loginLog(username, user.role, ip, 'success', suspicious);
+  if (suspicious) toast(`⚠️ New IP detected: ${ip}. Logged as suspicious.`,'warn');
+
+ 
+  S.pendingUser = user;
+  S.mfaAttemptsLeft = 3;
+  issueOtp();
+
+  show('s-mfa');
+  hide('s-login');
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-alert');
+  el.innerHTML = `⚠️ &nbsp;${msg}`;
+  el.style.display = 'flex';
+}
+
+function showLockout(user) {
+  document.getElementById('login-form').style.display='none';
+  const ld = document.getElementById('lockout-display');
+  ld.style.display='block';
+  loginLog(user.username,user.role,S.ip,'locked');
+  startLockCountdown(user);
+}
+
+
+function verifyOtp() {
+  const code = getOtpValue();
+  const alertEl = document.getElementById('mfa-alert');
+  alertEl.style.display='none';
+
+  if (Date.now() > S.otpExpiry) {
+    alertEl.innerHTML='⏰ &nbsp;OTP has expired. Please request a new one.';
+    alertEl.style.display='flex'; return;
+  }
+  if (code !== S.lastOtp) {
+    S.mfaAttemptsLeft--;
+    if (S.mfaAttemptsLeft <= 0) {
+      toast('Too many incorrect OTP attempts. Returning to login.','err');
+      backToLogin(); return;
+    }
+    alertEl.innerHTML=`❌ &nbsp;Incorrect OTP. ${S.mfaAttemptsLeft} attempt(s) remaining.`;
+    alertEl.style.display='flex'; return;
+  }
+
+
+  clearInterval(S.otpTimerId);
+  const user = S.pendingUser;
+  auditLog(user.username, user.role, 'MFA_VERIFIED');
+
+  
+  const msg = document.getElementById('granted-msg');
+  msg.textContent = `✅ Welcome ${user.username}! Role: ${user.role.toUpperCase()} | IP: ${S.ip} | Session: 10 min`;
+  show('s-ready'); hide('s-mfa');
+
+  document.getElementById('btn-enter').onclick = () => launchApp(user);
+  setTimeout(() => launchApp(user), 1800);
+}
+
+function backToLogin() {
+  S.pendingUser = null; S.mfaAttemptsLeft = 3;
+  clearInterval(S.otpTimerId);
+  [0,1,2,3,4,5].forEach(i=>{ const d=document.getElementById('otp'+i); if(d){d.value='';d.classList.remove('filled');} });
+  document.getElementById('mfa-alert').style.display='none';
+  document.getElementById('login-alert').style.display='none';
+  document.getElementById('login-form').style.display='block';
+  show('s-login'); hide('s-mfa');
+}
+
+
+function launchApp(user) {
+  S.user = user;
+  S.start = Date.now();
+  auditLog(user.username, user.role, 'SESSION_START');
+
+  
+  document.getElementById('auth-screens').style.display='none';
+  document.getElementById('app').style.display='block';
+
+ 
+  document.getElementById('sb-name').textContent = user.username;
+  const chip = document.getElementById('sb-chip');
+  chip.textContent = user.role.toUpperCase();
+  chip.className = `role-chip chip-${user.role}`;
+  document.getElementById('sb-ip').textContent = `${S.ip} — verified`;
+
+  buildNav(user.role);
+  startSessionCountdown();
+
+  nav(user.role === 'doctor' ? 'p-doctor' : 'p-admin');
+  toast(`Access granted. Session expires in 10 min.`, 'ok');
+}
+
+
+function startSessionCountdown() {
+  clearTimeout(S.timeoutId);
+  clearInterval(S.tickId);
+  S.start = Date.now();
+  S.timeoutId = setTimeout(() => {
+    toast('Session expired. Logging out.','warn');
+    doLogout();
+  }, SESSION_MS);
+  S.tickId = setInterval(() => {
+    const rem = Math.max(0, SESSION_MS - (Date.now()-S.start));
+    const m=Math.floor(rem/60000), s=Math.floor((rem%60000)/1000);
+    const el=document.getElementById('sess-time');
+    if(el) el.textContent=`${m}:${String(s).padStart(2,'0')}`;
+    const fill=document.getElementById('sess-fill');
+    if(fill){
+      const pct=(rem/SESSION_MS)*100;
+      fill.style.width=pct+'%';
+      fill.className='session-fill'+(pct<20?' crit':pct<40?' warn':'');
+    }
+  },1000);
+}
+
+function resetSession() { S.start = Date.now(); }
+
+function doLogout() {
+  if(S.user) auditLog(S.user.username,S.user.role,'LOGOUT');
+  clearTimeout(S.timeoutId); clearInterval(S.tickId); clearInterval(S.otpTimerId);
+  S = {user:null,ip:null,start:null,timeoutId:null,tickId:null,emergencyAccess:null,
+       lastOtp:null,otpExpiry:null,otpTimerId:null,pendingUser:null,mfaAttemptsLeft:3};
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screens').style.display='block';
+  document.getElementById('l-user').value=''; document.getElementById('l-pass').value='';
+  document.getElementById('login-alert').style.display='none';
+  document.getElementById('login-form').style.display='block';
+  document.getElementById('lockout-display').style.display='none';
+  updateAttemptDots(0);
+  show('s-login'); hide('s-mfa'); hide('s-ready');
+}
+
+
+let curPage='', curPid=null;
+
+function buildNav(role) {
+  const navEl = document.getElementById('sb-nav');
+  if (role==='doctor') {
+    navEl.innerHTML=`
+      <div class="nav-item" data-p="p-doctor" onclick="nav('p-doctor')"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item" data-p="p-patients" onclick="nav('p-patients')"><span class="nav-icon">◫</span>Patients</div>
+      <hr class="nav-divider">
+    `;
+  } else {
+    navEl.innerHTML=`
+      <div class="nav-item" data-p="p-admin" onclick="nav('p-admin')"><span class="nav-icon">◈</span>Dashboard</div>
+      <div class="nav-item" data-p="p-approvals" onclick="nav('p-approvals')"><span class="nav-icon">◎</span>Approvals<span class="nav-badge" id="appr-badge" style="display:none">0</span></div>
+      <div class="nav-item" data-p="p-login-logs" onclick="nav('p-login-logs')"><span class="nav-icon">🌐</span>Login Logs</div>
+      <div class="nav-item" data-p="p-audit" onclick="nav('p-audit')"><span class="nav-icon">≡</span>Audit Logs</div>
+      <hr class="nav-divider">
+    `;
+    updateApprBadge();
+  }
+}
+
+function updateApprBadge() {
+  const b=document.getElementById('appr-badge'); if(!b) return;
+  const c=DB.clinical_requests.filter(r=>r.status==='pending').length;
+  b.style.display=c>0?'inline-flex':'none'; b.textContent=c;
+}
+
+function nav(page, pid=null) {
+  resetSession();
+  curPage=page; curPid=pid;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.p===page);
+  });
+  const main=document.getElementById('main');
+  switch(page){
+    case 'p-doctor':   main.innerHTML=renderDoctorDash(); break;
+    case 'p-patients': main.innerHTML=renderDoctorDash(); break;
+    case 'p-patient':  main.innerHTML=renderPatient(pid); break;
+    case 'p-admin':    main.innerHTML=renderAdminDash(); break;
+    case 'p-approvals':main.innerHTML=renderApprovals(); break;
+    case 'p-login-logs':main.innerHTML=renderLoginLogs(); break;
+    case 'p-audit':    main.innerHTML=renderAudit(); break;
+  }
+}
+
+
+function getEmergency(pid=null) {
+  const e=S.emergencyAccess; if(!e) return null;
+  if(Date.now()>e.expiry){S.emergencyAccess=null;return null;}
+  if(pid!==null && e.patientId!==pid) return null;
+  return e;
+}
+
+function requestEmergency(pid) {
+  const p=DB.patients.find(x=>x.id===pid); if(!p) return;
+  if(getEmergency(pid)){toast('Emergency access already active.','warn');return;}
+  showEmergencyForm(pid, p);
+}
+
+function showEmergencyForm(pid, p) {
+  const overlay=document.createElement('div');
+  overlay.className='stepup-overlay'; overlay.id='emerg-form';
+  overlay.innerHTML=`
+    <div class="stepup-box" style="max-width:480px;">
+      <div style="font-size:1.8rem;text-align:center;margin-bottom:8px;">⚡</div>
+      <div class="head-font" style="font-size:1rem;font-weight:700;color:var(--red);text-align:center;margin-bottom:4px;">Break-the-Glass Emergency Access</div>
+      <div style="font-size:.7rem;color:var(--text3);text-align:center;margin-bottom:16px;">Patient: <strong style="color:var(--text)">${p.name}</strong></div>
+      <div class="notice n-red" style="margin-bottom:14px;">
+        ⚠️ Action permanently logged · Admin notified · 10-min window · Irreversible
+      </div>
+      <div class="fgroup">
+        <label>Clinical Justification <span style="color:var(--red)">*</span></label>
+        <textarea class="finput" id="emerg-reason" rows="4" placeholder="Describe the medical emergency…"></textarea>
+      </div>
+      <div class="flex gap ic" style="gap:10px;">
+        <button class="btn btn-red w100" onclick="confirmEmergency(${pid})">⚡ Confirm</button>
+        <button class="btn btn-ghost w100" onclick="document.getElementById('emerg-form').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function confirmEmergency(pid) {
+  const reason=(document.getElementById('emerg-reason')||{}).value?.trim()||'';
+  if(reason.length<15){toast('Justification must be at least 15 characters.','warn');return;}
+  const now=Date.now(), expiry=new Date(now+10*60*1000);
+  S.emergencyAccess={patientId:pid,reason,expiry};
+  DB.emergency_logs.push({id:DB._ids.emerg++,doctor_name:S.user.username,patient_id:pid,reason,start_time:new Date(now).toISOString(),expiry_time:expiry.toISOString()});
+  auditLog(S.user.username,'doctor',`EMERGENCY_ACCESS: ${reason}`,pid,true);
+  document.getElementById('emerg-form')?.remove();
+  toast(`Emergency access granted — expires ${expiry.toLocaleTimeString()}`,'warn');
+  nav('p-patient',pid);
+}
+
+
+function renderDoctorDash() {
+  const em=getEmergency();
+  const pend=DB.clinical_requests.filter(r=>r.doctor_name===S.user.username&&r.status==='pending').length;
+  return `
+  <div class="topbar">
+    <div><h1>◈ Doctor Dashboard</h1><div class="sub">// ${S.user.username} · RBAC:doctor · ${S.ip}</div></div>
+    <div class="clock-chip">🕒 <span id="clk"></span></div>
+  </div>
+  ${em?emergBanner(em):''}
+  <div class="stat-grid">
+    <div class="scard teal"><div class="sv">${DB.patients.length}</div><div class="sl">Patients</div></div>
+    <div class="scard amber"><div class="sv">${pend}</div><div class="sl">My Pending</div></div>
+    <div class="scard ${em?'red':'green'}"><div class="sv">${em?'🔴':'✓'}</div><div class="sl">Emergency</div></div>
+    <div class="scard blue"><div class="sv">${DB.audit_logs.filter(l=>l.username===S.user.username).length}</div><div class="sl">My Actions</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span>// PATIENT ROSTER</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Insurance</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${DB.patients.map(p=>`<tr>
+          <td class="mono fw3">#${p.id}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${statusBadge(p.diagnosis_status)}</td>
+          <td class="fw3" style="font-size:.72rem">${p.insurance}</td>
+          <td class="flex gap ic" style="gap:6px;">
+            <button class="btn btn-teal btn-sm" onclick="viewPat(${p.id})">◫ View</button>
+            <button class="btn btn-red btn-sm" onclick="requestEmergency(${p.id})">⚡ Emergency</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+function renderPatient(pid) {
+  const p=DB.patients.find(x=>x.id===pid); if(!p) return '<div class="empty">Not found.</div>';
+  const em=getEmergency(pid);
+  const pend=DB.clinical_requests.find(r=>r.patient_id===pid&&r.status==='pending');
+  return `
+  <div class="topbar">
+    <div><h1>◫ ${p.name}</h1><div class="sub">// ID #${p.id} · ${statusBadge(p.diagnosis_status)}</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="nav('p-doctor')">← Back</button>
+  </div>
+  ${em?emergBanner(em):''}
+  <div class="card">
+    <div class="card-head"><span>// NON-CLINICAL DATA</span><span class="badge b-purple" style="font-size:.55rem">Admin Only</span></div>
+    <div class="card-body">
+      <div class="frow">
+        <div><div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Phone</div><div style="color:var(--text)">${p.phone}</div></div>
+        <div><div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Insurance</div><div style="color:var(--text)">${p.insurance}</div></div>
+        <div class="fsingle"><div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Address</div><div style="color:var(--text)">${p.address}</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span>// CLINICAL DATA</span><span class="badge b-teal" style="font-size:.55rem">Dual Authorization</span></div>
+    <div class="card-body">
+      <div class="frow" style="margin-bottom:16px;">
+        <div><div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Current Diagnosis</div><div style="color:var(--text)">${p.diagnosis||'—'}</div></div>
+        <div><div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Current Prescription</div><div style="color:var(--text)">${p.prescription||'—'}</div></div>
+      </div>
+      <hr class="divider">
+      ${pend?`<div class="notice n-warn">⏳ Clinical update pending admin approval. Submit locked.</div>`:`
+      <div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">// Submit Clinical Update (Requires Dual Authorization)</div>
+      <div class="frow">
+        <div class="fgroup"><label>New Diagnosis</label><textarea class="finput" id="new-dx" rows="3">${p.diagnosis||''}</textarea></div>
+        <div class="fgroup"><label>New Prescription</label><textarea class="finput" id="new-rx" rows="3">${p.prescription||''}</textarea></div>
+      </div>
+      <button class="btn btn-amber" onclick="submitClinical(${pid})">📤 Submit for Admin Approval</button>
+      `}
+    </div>
+  </div>
+  ${!em?`<div class="card" style="border-color:#ff4d6a25;">
+    <div class="card-head" style="color:var(--red);">// BREAK-THE-GLASS</div>
+    <div class="card-body">
+      <div class="notice n-red" style="margin-bottom:12px;">⚠️ Emergency override. Justification required. All actions logged permanently. Admin is notified immediately.</div>
+      <button class="btn btn-red" onclick="requestEmergency(${pid})">⚡ Request Emergency Access</button>
+    </div>
+  </div>`:''}`;
+}
+
+function viewPat(pid) {
+  auditLog(S.user.username,S.user.role,'VIEW_PATIENT',pid,!!getEmergency(pid));
+  nav('p-patient',pid);
+}
+
+function submitClinical(pid) {
+  const dx=(document.getElementById('new-dx')||{}).value?.trim();
+  const rx=(document.getElementById('new-rx')||{}).value?.trim();
+  if(!dx&&!rx){toast('Enter diagnosis or prescription.','warn');return;}
+  if(DB.clinical_requests.find(r=>r.patient_id===pid&&r.status==='pending')){toast('Pending request exists.','warn');return;}
+  DB.clinical_requests.push({id:DB._ids.req++,patient_id:pid,doctor_name:S.user.username,requested_change:JSON.stringify({diagnosis:dx,prescription:rx}),status:'pending',created_at:new Date().toISOString()});
+  DB.patients.find(x=>x.id===pid).diagnosis_status='Pending_Admin_Approval';
+  auditLog(S.user.username,'doctor','SUBMIT_CLINICAL_REQUEST',pid);
+  toast('Clinical update submitted for admin approval.','ok');
+  nav('p-patient',pid);
+}
+
+
+function renderAdminDash() {
+  const pend=DB.clinical_requests.filter(r=>r.status==='pending').length;
+  const emActv=DB.emergency_logs.filter(e=>Date.now()<new Date(e.expiry_time).getTime());
+  const suspCount=DB.login_logs.filter(l=>l.suspicious).length;
+  return `
+  <div class="topbar">
+    <div><h1>◈ Admin Dashboard</h1><div class="sub">// ${S.user.username} · RBAC:admin · ${S.ip}</div></div>
+    <div class="clock-chip">🕒 <span id="clk"></span></div>
+  </div>
+  ${emActv.length>0?`<div class="emerg-banner"><div class="pulse-dot"></div>
+    <div><strong style="color:var(--red)">${emActv.length} ACTIVE EMERGENCY SESSION(S)</strong> — ${emActv.map(e=>`${e.doctor_name}→#${e.patient_id}`).join(' | ')}
+    <button class="btn btn-red btn-sm" style="margin-left:12px" onclick="nav('p-audit')">View Logs</button></div>
+  </div>`:''}
+  ${suspCount>0?`<div class="notice n-warn">⚠️ ${suspCount} suspicious login event(s) detected from new IP addresses. <button class="btn btn-amber btn-sm" style="margin-left:8px" onclick="nav('p-login-logs')">Review Logs</button></div>`:''}
+  <div class="stat-grid">
+    <div class="scard teal"><div class="sv">${DB.patients.length}</div><div class="sl">Patients</div></div>
+    <div class="scard amber"><div class="sv">${pend}</div><div class="sl">Pending</div></div>
+    <div class="scard red"><div class="sv">${emActv.length}</div><div class="sl">Emergencies</div></div>
+    <div class="scard blue"><div class="sv">${DB.login_logs.length}</div><div class="sl">Login Events</div></div>
+    <div class="scard purple"><div class="sv">${DB.audit_logs.length}</div><div class="sl">Audit Entries</div></div>
+    <div class="scard ${suspCount>0?'red':'green'}"><div class="sv">${suspCount}</div><div class="sl">Suspicious</div></div>
+  </div>
+  <div class="flex gap" style="gap:10px;margin-bottom:18px;">
+    ${pend>0?`<button class="btn btn-amber" onclick="nav('p-approvals')">◎ ${pend} Pending Approval(s)</button>`:''}
+    <button class="btn btn-ghost" onclick="nav('p-login-logs')">🌐 Login Logs</button>
+    <button class="btn btn-ghost" onclick="nav('p-audit')">≡ Audit Logs</button>
+  </div>
+  <div class="card">
+    <div class="card-head"><span>// PATIENT LIST — NON-CLINICAL MANAGEMENT</span></div>
+    <div class="notice n-info" style="margin:14px 18px 0;">ℹ️ Admin can ONLY edit non-clinical data. Clinical changes require doctor + approval workflow.</div>
+    <div class="tw"><table>
+      <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Insurance</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>${DB.patients.map(p=>`<tr>
+        <td class="mono fw3">#${p.id}</td><td><strong>${p.name}</strong></td>
+        <td class="fw3">${p.phone}</td><td class="fw3" style="font-size:.7rem">${p.insurance}</td>
+        <td>${statusBadge(p.diagnosis_status)}</td>
+        <td><button class="btn btn-teal btn-sm" onclick="openAdminEdit(${p.id})">✏ Edit Non-Clinical</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function openAdminEdit(pid) {
+  const p=DB.patients.find(x=>x.id===pid); if(!p) return;
+  const overlay=document.createElement('div');
+  overlay.className='stepup-overlay'; overlay.id='admin-edit';
+  overlay.innerHTML=`
+    <div class="stepup-box" style="max-width:500px;">
+      <div class="head-font" style="font-size:1rem;font-weight:700;margin-bottom:4px;">✏ Edit Non-Clinical Data</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-bottom:16px;">${p.name} — Admin-only editable fields</div>
+      <div class="notice n-info" style="margin-bottom:14px;">ℹ️ Only phone, address, and insurance can be edited here.</div>
+      <div class="frow">
+        <div class="fgroup"><label>Phone</label><input class="finput" id="ae-phone" value="${p.phone}"></div>
+        <div class="fgroup"><label>Insurance</label><input class="finput" id="ae-ins" value="${p.insurance}"></div>
+      </div>
+      <div class="fgroup"><label>Address</label><input class="finput" id="ae-addr" value="${p.address}"></div>
+      <hr class="divider">
+      <div class="fgroup"><label>Diagnosis (Read-Only)</label><div class="rof">${p.diagnosis||'—'}</div></div>
+      <div class="fgroup"><label>Prescription (Read-Only)</label><div class="rof">${p.prescription||'—'}</div></div>
+      <div class="flex gap ic" style="gap:10px;">
+        <button class="btn btn-green w100" onclick="saveAdminEdit(${pid})">💾 Save</button>
+        <button class="btn btn-ghost w100" onclick="document.getElementById('admin-edit').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function saveAdminEdit(pid) {
+  const p=DB.patients.find(x=>x.id===pid); if(!p) return;
+  p.phone=(document.getElementById('ae-phone')||{}).value||p.phone;
+  p.address=(document.getElementById('ae-addr')||{}).value||p.address;
+  p.insurance=(document.getElementById('ae-ins')||{}).value||p.insurance;
+  auditLog(S.user.username,'admin','EDIT_NON_CLINICAL',pid);
+  document.getElementById('admin-edit')?.remove();
+  toast(`Updated non-clinical data for ${p.name}.`,'ok');
+  nav('p-admin');
+}
+
+function renderApprovals() {
+  const pend=DB.clinical_requests.filter(r=>r.status==='pending');
+  const done=[...DB.clinical_requests].filter(r=>r.status!=='pending').reverse().slice(0,8);
+  return `
+  <div class="topbar"><div><h1>◎ Clinical Approvals</h1><div class="sub">// Dual-authorization workflow</div></div></div>
+  <div class="notice n-warn">⚠️ You can only approve/reject — you CANNOT modify clinical content.</div>
+  ${pend.length===0?`<div class="card"><div class="empty">✅ No pending approvals.</div></div>`
+    :pend.map(req=>{
+      const p=DB.patients.find(x=>x.id===req.patient_id);
+      const ch=JSON.parse(req.requested_change);
+      return `<div class="card" style="border-left:3px solid var(--amber);">
+        <div class="card-head"><span>REQ #${req.id} — ${p?.name||'?'} · Dr.${req.doctor_name}</span><span class="badge b-amber">⏳ Pending</span></div>
+        <div class="card-body">
+          <div class="frow" style="margin-bottom:12px;">
+            <div><div class="sl" style="margin-bottom:5px">Proposed Diagnosis</div><div class="proposed">${ch.diagnosis||'(no change)'}</div></div>
+            <div><div class="sl" style="margin-bottom:5px">Proposed Prescription</div><div class="proposed">${ch.prescription||'(no change)'}</div></div>
+          </div>
+          <div class="flex gap ic" style="gap:10px;">
+            <button class="btn btn-green" onclick="doApprove(${req.id},true)">✅ Approve</button>
+            <button class="btn btn-red" onclick="doApprove(${req.id},false)">✕ Reject</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  ${done.length>0?`<div class="card">
+    <div class="card-head"><span>// RECENT DECISIONS</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Decision</th></tr></thead>
+      <tbody>${done.map(r=>{const p=DB.patients.find(x=>x.id===r.patient_id);return`<tr><td class="mono fw3">#${r.id}</td><td>${p?.name||'—'}</td><td>${r.doctor_name}</td><td>${r.status==='approved'?'<span class="badge b-green">Approved</span>':'<span class="badge b-red">Rejected</span>'}</td></tr>`;}).join('')}</tbody>
+    </table></div>
+  </div>`:''}`;
+}
+
+function doApprove(reqId, approve) {
+  const req=DB.clinical_requests.find(r=>r.id===reqId); if(!req) return;
+  if(approve){
+    const ch=JSON.parse(req.requested_change);
+    const p=DB.patients.find(x=>x.id===req.patient_id);
+    if(p){if(ch.diagnosis)p.diagnosis=ch.diagnosis;if(ch.prescription)p.prescription=ch.prescription;p.diagnosis_status='Approved';}
+    req.status='approved';
+    auditLog(S.user.username,'admin','APPROVE_CLINICAL',req.patient_id);
+    toast('Clinical update approved and applied.','ok');
+  } else {
+    DB.patients.find(x=>x.id===req.patient_id)&&(DB.patients.find(x=>x.id===req.patient_id).diagnosis_status='Active');
+    req.status='rejected';
+    auditLog(S.user.username,'admin','REJECT_CLINICAL',req.patient_id);
+    toast('Clinical update rejected.','warn');
+  }
+  updateApprBadge();
+  nav('p-approvals');
+}
+
+function renderLoginLogs() {
+  const logs=[...DB.login_logs].reverse();
+  return `
+  <div class="topbar"><div><h1>🌐 Login Monitoring</h1><div class="sub">// IP tracking · brute-force detection · suspicious activity</div></div></div>
+  <div class="stat-grid">
+    <div class="scard green"><div class="sv">${DB.login_logs.filter(l=>l.status==='success').length}</div><div class="sl">Successful</div></div>
+    <div class="scard red"><div class="sv">${DB.login_logs.filter(l=>l.status==='failed').length}</div><div class="sl">Failed</div></div>
+    <div class="scard amber"><div class="sv">${DB.login_logs.filter(l=>l.status==='locked').length}</div><div class="sl">Lockouts</div></div>
+    <div class="scard purple"><div class="sv">${DB.login_logs.filter(l=>l.suspicious).length}</div><div class="sl">Suspicious IPs</div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><span>// LOGIN LOG — ALL EVENTS (${DB.login_logs.length})</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Timestamp</th><th>Username</th><th>Role</th><th>IP Address</th><th>Status</th><th>Suspicious</th></tr></thead>
+      <tbody>
+        ${logs.length===0?'<tr><td colspan="7" class="empty">No login events yet.</td></tr>'
+          :logs.map(l=>`<tr class="${l.suspicious?'suspicious':''}">
+            <td class="mono fw3">${l.id}</td>
+            <td class="mono" style="font-size:.65rem;color:var(--text2)">${l.login_time.replace('T',' ').substring(0,19)}</td>
+            <td><strong>${l.username}</strong></td>
+            <td>${l.role==='doctor'?'<span class="badge b-teal">Doctor</span>':l.role==='admin'?'<span class="badge b-purple">Admin</span>':'<span class="badge b-red">Unknown</span>'}</td>
+            <td class="mono" style="font-size:.7rem">${l.ip}</td>
+            <td>${l.status==='success'?'<span class="badge b-green">✓ Success</span>':l.status==='locked'?'<span class="badge b-red">🔐 Locked</span>':'<span class="badge b-red">✕ Failed</span>'}</td>
+            <td>${l.suspicious?'<span class="badge b-amber">⚠ New IP</span>':'<span style="color:var(--text3)">—</span>'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+function renderAudit() {
+  const logs=[...DB.audit_logs].reverse().slice(0,200);
+  const emLogs=[...DB.emergency_logs].reverse();
+  return `
+  <div class="topbar"><div><h1>≡ Immutable Audit Logs</h1><div class="sub">// SHA-256 hash-chained · append-only · tamper-evident</div></div></div>
+  <div class="notice n-info">🔒 Every entry is SHA-256 chained to the previous. No entry can be modified or deleted. Emergency actions highlighted.</div>
+  <div class="card">
+    <div class="card-head"><span>// SYSTEM AUDIT LOG (${DB.audit_logs.length} entries)</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Timestamp</th><th>User</th><th>Role</th><th>Action</th><th>Patient</th><th>Emerg</th><th>⛓ Hash</th></tr></thead>
+      <tbody>
+        ${logs.length===0?'<tr><td colspan="8" class="empty">No entries.</td></tr>'
+          :logs.map(l=>`<tr class="${l.emergFlag?'emerg':''}">
+            <td class="mono fw3">${l.id}</td>
+            <td class="mono" style="font-size:.62rem;color:var(--text2)">${l.ts.replace('T',' ').substring(0,19)}</td>
+            <td class="mono" style="font-size:.75rem"><strong>${l.username}</strong></td>
+            <td>${l.role==='doctor'?'<span class="badge b-teal">Doc</span>':l.role==='admin'?'<span class="badge b-purple">Admin</span>':'<span class="badge b-blue">Sys</span>'}</td>
+            <td style="font-size:.72rem;max-width:200px;word-break:break-word">${l.action}</td>
+            <td class="fw3">${l.patientId?'#'+l.patientId:'—'}</td>
+            <td>${l.emergFlag?'<span class="badge b-red">🚨</span>':'<span style="color:var(--text3)">—</span>'}</td>
+            <td><span class="hcell" title="${l.current_hash}">⛓${l.current_hash.substring(0,10)}…</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card" style="border-color:#ff4d6a20;">
+    <div class="card-head" style="color:var(--red);"><span>// EMERGENCY ACCESS LOG (${DB.emergency_logs.length})</span></div>
+    <div class="tw"><table>
+      <thead><tr><th>ID</th><th>Doctor</th><th>Patient</th><th>Justification</th><th>Start</th><th>Expiry</th><th>Status</th></tr></thead>
+      <tbody>
+        ${emLogs.length===0?'<tr><td colspan="7" class="empty">No emergency events.</td></tr>'
+          :emLogs.map(e=>{const active=Date.now()<new Date(e.expiry_time).getTime();const p=DB.patients.find(x=>x.id===e.patient_id);
+            return`<tr class="${active?'emerg':''}">
+              <td class="mono fw3">${e.id}</td><td class="mono">${e.doctor_name}</td><td>${p?p.name:'#'+e.patient_id}</td>
+              <td style="font-size:.7rem;max-width:220px">${e.reason}</td>
+              <td class="mono" style="font-size:.65rem">${new Date(e.start_time).toLocaleTimeString()}</td>
+              <td class="mono" style="font-size:.65rem">${new Date(e.expiry_time).toLocaleTimeString()}</td>
+              <td>${active?'<span class="badge b-red">🔴 Active</span>':'<span class="badge b-green">✓ Expired</span>'}</td>
+            </tr>`;}).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+
+
+function statusBadge(s) {
+  if(s==='Pending_Admin_Approval') return '<span class="badge b-amber">⏳ Pending</span>';
+  if(s==='Approved')               return '<span class="badge b-green">✓ Approved</span>';
+  return '<span class="badge b-teal">● Active</span>';
+}
+
+function emergBanner(em) {
+  return `<div class="emerg-banner"><div class="pulse-dot"></div>
+    <div><strong style="color:var(--red)">EMERGENCY ACCESS ACTIVE</strong> — Expires ${em.expiry.toLocaleTimeString()} | "${em.reason}"</div>
+  </div>`;
+}
+
+function show(id){ document.getElementById(id).style.display='flex'; }
+function hide(id){ document.getElementById(id).style.display='none'; }
+
+function toggleEye(inputId, btnId) {
+  const inp=document.getElementById(inputId);
+  const btn=document.getElementById(btnId);
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'👁':'🙈';
+}
+
+function toast(msg, type='info') {
+  const map={ok:'t-ok',err:'t-err',warn:'t-warn',info:'t-info'};
+  const icons={ok:'✓',err:'✕',warn:'⚠',info:'ℹ'};
+  const el=document.createElement('div');
+  el.className=`toast ${map[type]||'t-info'}`;
+  el.innerHTML=`<span>${icons[type]||'ℹ'}</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);},3500);
+}
+
+// Live clock refresh
+setInterval(()=>{
+  const now=new Date().toUTCString().replace(' GMT','');
+  document.querySelectorAll('#clk').forEach(el=>el&&(el.textContent=now));
+},1000);
+
+
+(function init(){
+ 
+  DB.audit_logs.push({
+    id:DB._ids.audit++, username:'SYSTEM', role:'system',
+    action:'SYSTEM_BOOT — MedAccess OS v3.0 initialized',
+    patientId:null, ts:new Date().toISOString(), emergFlag:false,
+    prev_hash:'GENESIS',
+    current_hash:chainHash('GENESIS',{boot:true,ts:Date.now()}),
+  });
+
+  
+  document.getElementById('btn-login').addEventListener('click', doLogin);
+  document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('l-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-pass').focus();});
+  document.getElementById('btn-verify-otp').addEventListener('click', verifyOtp);
+
+  
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      document.getElementById('emerg-form')?.remove();
+      document.getElementById('admin-edit')?.remove();
+    }
+  });
+})();
+</script>
+</body>
+</html>
